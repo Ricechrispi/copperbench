@@ -51,11 +51,11 @@ def main():
 
     # for each instance in train set: cp to train folder
     for instance in split1_instances:
-        shutil.copy(os.path.join(args.instance_folder, instance), args.split1_folder)
+        shutil.copy(os.path.join(args.instance_folder, instance), os.path.join(args.split1_folder, instance))
 
     # for each instance in test set: cp to test folder
     for instance in split2_instances:
-        shutil.copy(os.path.join(args.instance_folder, instance), args.split2_folder)
+        shutil.copy(os.path.join(args.instance_folder, instance), os.path.join(args.split2_folder, instance))
 
 if __name__ == "__main__":
     main()

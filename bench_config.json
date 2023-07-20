@@ -1,6 +1,6 @@
 {
     "name" : "cpriesne_output",
-    "executable" :  "/home/guests/cpriesne/copperhead/benchmark_wrapper.sh",
+    "executable" :  "/home/guests/cpriesne/copperbench/benchmark_wrapper.sh",
     "configs" : "configs.txt",
     "instances" : "instances.txt",
     "timeout" : 900,
