@@ -1,0 +1,11 @@
+{
+    "name" : "cpriesne_output",
+    "executable" :  "/home/guests/cpriesne/copperbench/feature_wrapper.sh",
+    "configs" : "feature_configs.txt",
+    "instances" : "instances.txt",
+    "timeout" : 900,
+    "mem_limit" : 250000,
+    "request_cpus" : 4,
+    "working_dir" : ".",
+    "exclusive": true
+}

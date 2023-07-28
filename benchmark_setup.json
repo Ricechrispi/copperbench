@@ -1,10 +1,11 @@
 {
     "name" : "cpriesne_output",
     "executable" :  "/home/guests/cpriesne/copperbench/benchmark_wrapper.sh",
-    "configs" : "configs.txt",
+    "configs" : "benchmark_configs.txt",
     "instances" : "instances.txt",
     "timeout" : 900,
-    "mem_limit" : 25600,
-    "request_cpus" : 1,
-    "working_dir" : "."
+    "mem_limit" : 250000,
+    "request_cpus" : 4,
+    "working_dir" : ".",
+    "exclusive": true
 }
