@@ -24,8 +24,7 @@ while [[ $# -gt 0 ]]; do
     ;;
   -e | --extract)
     shift
-    EXTRACT="${1}"
-    shift
+    EXTRACT="True"
     ;;
   -E | --ext_folder)
     shift
@@ -124,7 +123,7 @@ conda activate "$conda_env_name"
 echo "c o ================= Building Command String ============"
 cmd="python feature_runner.py"
 if [[ -n "${EXTRACT}" ]]; then
-  cmd+=" -extract ${EXTRACT}"
+  cmd+=" -extract"
 fi
 if [[ -n "${INSTANCE}" ]]; then
   cmd+=" -instance ${INSTANCE}"
