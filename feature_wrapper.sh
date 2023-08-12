@@ -84,14 +84,7 @@ echo "c o ================= SET PRIM INTRT HANDLING ============"
 function interrupted() {
   echo "c o Sending kill to subprocess"
   kill -TERM $PID
-#  echo "c o Removing tmp files"
-#  [ ! -z "$tmpfile" ] && rm $tmpfile
 }
-function finish {
-#  echo "c o Removing tmp files"
-#  [ ! -z "$tmpfile" ] && rm $tmpfile
-}
-trap finish EXIT
 trap interrupted TERM
 trap interrupted INT
 
@@ -116,9 +109,6 @@ else
 fi
 unset __conda_setup
 conda activate "$conda_env_name"
-
-#echo "c o ================= Preparing tmpfiles ================="
-#tmpfile=$(mktemp /run/shm/result.XXXXXX)
 
 echo "c o ================= Building Command String ============"
 cmd="python feature_runner.py"
