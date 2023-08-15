@@ -216,7 +216,7 @@ def main() -> None:
         file.write(f'#SBATCH --time={datetime.timedelta(seconds=slurm_time)}\n')
         file.write(f'#SBATCH --partition={bench_config.partition}\n')
         file.write(f'#SBATCH --cpus-per-task={cpus}\n')
-        file.write(f'#SBATCH --mem-per-cpu={int(math.ceil(bench_config.mem_limit/cpus))}\n')
+        file.write(f'#SBATCH --mem=0\n')
         if bench_config.cache_pinning:
             file.write(f'#SBATCH --gres=cache:{cache_lines}\n')
         file.write(f'#SBATCH --cpu-freq={bench_config.cpu_freq*1000}-{bench_config.cpu_freq*1000}:performance\n')
@@ -224,7 +224,7 @@ def main() -> None:
         file.write(f'#SBATCH --error=/dev/null\n')
         file.write(f'#SBATCH --array=1-{len(start_scripts)}\n')
         if bench_config.exclusive:
-            file.write(f"#SBATCH --exclusive=user\n")
+            file.write(f"#SBATCH --exclusive\n")
         file.write('#SBATCH --ntasks=1\n\n')
         file.write(f'cd ~/{bench_path}\n')
         file.write('start=$( awk "NR==$SLURM_ARRAY_TASK_ID" start_list.txt )\n')
