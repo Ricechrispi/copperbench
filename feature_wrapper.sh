@@ -61,10 +61,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "${ALGO}" ]]; then
-  echo "c o Please supply an algorithm"
-  exit 1
-fi
 if [[ -z "${INSTANCE}" ]]; then
   echo "c o Please supply an instance file"
   exit 1
