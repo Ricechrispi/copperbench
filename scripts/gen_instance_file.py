@@ -1,13 +1,16 @@
 import os
 import argparse
 
-def create_instance_file(instance_folder, output_file):
+def create_instance_file(instance_folder, output_file, absolute=True):
     lines = []
     prefix = "-i"
     for file in os.listdir(instance_folder):
         filename = os.fsdecode(file)
         if filename.endswith(".cnf"):
-            line = f"{prefix} {os.path.join(instance_folder, filename)}\n"
+            if absolute:
+                line = f"{prefix} {os.path.abspath(os.path.join(instance_folder, filename))}\n"
+            else:
+                line = f"{prefix} {os.path.join(instance_folder, filename)}\n"
             lines.append(line)
 
     with open(output_file, "w") as out_file:

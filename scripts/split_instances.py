@@ -4,6 +4,8 @@ import shutil
 import argparse
 import math
 import json
+from gen_instance_file import create_instance_file
+
 def process_instances(instances, src_folder, dest_folder, move=False):
     for instance in instances:
         source = os.path.join(src_folder, instance)
@@ -46,6 +48,8 @@ def split(instance_folder, split1_folder, split2_folder, split1_percentage, move
     process_instances(split1_instances, instance_folder, split1_folder, move)
     process_instances(split2_instances, instance_folder, split2_folder, move)
 
+    return split1_instances, split2_instances
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--instance_folder", dest="instance_folder", type=str)
@@ -57,6 +61,11 @@ def parse_args():
 def main():
     args = parse_args()
     random.seed(1)
+
+    config_to_selection_percentage = 0.5
+    train_test_percentage = 0.8
+    # extraction_folder = "home/guests/cpriesne/instances/extracted"
+    extraction_folder = "/home/ricechrispi/PycharmProjects/copperbench/extracted"
 
     config_folder = os.path.join(os.path.dirname(args.instance_folder),
                                  "algo_config")
@@ -94,52 +103,105 @@ def main():
     create_folders(extract_selection_folder, extract_selection_training_folder, extract_selection_testing_folder)
 
     # split into ac/as folders (copying them)
-    split(args.instance_folder, config_folder, selection_folder, 0.5)
+    split(args.instance_folder, config_folder, selection_folder, config_to_selection_percentage)
     # split ac folders into training/testing (moving them)
-    split(config_folder, config_training_folder, config_testing_folder, 0.8, move=True)
+    config_split1, config_split2 = split(config_folder, config_training_folder, config_testing_folder,
+                                         train_test_percentage, move=True)
     # split as folders into training/testing (moving them)
-    split(selection_folder, selection_training_folder, selection_testing_folder, 0.8, move=True)
+    selection_split1, selection_split2 = split(selection_folder, selection_training_folder, selection_testing_folder,
+                                               train_test_percentage, move=True)
 
-    from gen_instance_file import create_instance_file
-    algo_config_train_file = "algo_config_train_instances.txt"
-    algo_config_test_file = "algo_config_test_instances.txt"
-    algo_selection_train_file = "algo_selection_train_instances.txt"
-    algo_selection_test_file = "algo_selection_test_instances.txt"
 
-    create_instance_file(config_training_folder, algo_config_train_file)
-    create_instance_file(config_testing_folder, algo_config_test_file)
-    create_instance_file(selection_training_folder, algo_selection_train_file)
-    create_instance_file(selection_testing_folder, algo_selection_test_file)
+    extracted_instances = set([f for f in os.listdir(extraction_folder) if f.endswith(".cnf")])
+    print(f"Found {str(len(extracted_instances))} extracted instances")
 
-    def create_setup_dict(name, instances_file):
-        setup_dict = {
-            "name" : f"cpriesne_extract_{name}",
-            "executable" :  "/home/guests/cpriesne/copperbench/feature_wrapper.sh",
-            "configs" : f"cb_extract_config_{name}.txt",
-            "instances" : instances_file,
-            "timeout" : 3600,
-            "mem_limit" : 250000,
-            "request_cpus" : 24,
-            "working_dir" : ".",
-            "exclusive": True
-        }
-        with open(f"cb_extract_setup_{name}.json", "w") as setup_file:
-            setup_file.write(json.dumps(setup_dict, indent=4))
+    # runs in O^2, but this should be good enough
+    def matching_instances(target_instances, corresponding_split):
+        split_starts = [s.split(".cnf")[0] for s in corresponding_split]
+        matches = []
+        for instance in target_instances:
+            for split_start in split_starts:
+                if instance.startswith(split_start):
+                    matches.append(instance)
+        return matches
 
-    create_setup_dict("ac_train", algo_config_train_file)
-    create_setup_dict("ac_test", algo_config_train_file)
-    create_setup_dict("as_train", algo_selection_train_file)
-    create_setup_dict("as_test", algo_selection_train_file)
+    extracted_config_train = matching_instances(extracted_instances, config_split1)
+    extracted_instances = extracted_instances - set(extracted_config_train)
+    print(f"extracted_config_train: {extracted_config_train}")
 
-    def create_extract_config(name, extraction_folder):
-        line = f"-extract -ext_folder {extraction_folder}"
-        with open(f"cb_extract_config_{name}.txt", "w") as config_file:
-            config_file.write(line)
+    extracted_config_test = matching_instances(extracted_instances, config_split2)
+    extracted_instances = extracted_instances - set(extracted_config_test)
+    print(f"extracted_config_test: {extracted_config_test}")
 
-    create_extract_config("ac_train", extract_config_training_folder)
-    create_extract_config("ac_test", extract_config_testing_folder)
-    create_extract_config("as_train", extract_selection_training_folder)
-    create_extract_config("as_test", extract_selection_testing_folder)
+    extracted_selection_train = matching_instances(extracted_instances, selection_split1)
+    extracted_instances = extracted_instances - set(extracted_selection_train)
+    print(f"extracted_selection_train: {extracted_selection_train}")
+
+    extracted_selection_test = matching_instances(extracted_instances, selection_split2)
+    extracted_instances = extracted_instances - set(extracted_selection_test)
+    print(f"extracted_selection_test: {extracted_selection_test}")
+
+    print(f"len of extracted_instances should be 0. it is: {len(extracted_instances)}")
+    print(f"extracted instances: {str(extracted_instances)}")
+
+    # now copy them into respective folders:
+    process_instances(extracted_config_train, extraction_folder, extract_config_training_folder)
+    process_instances(extracted_config_test, extraction_folder, extract_config_testing_folder)
+    process_instances(extracted_selection_train, extraction_folder, extract_selection_training_folder)
+    process_instances(extracted_selection_test, extraction_folder, extract_selection_testing_folder)
+
+
+    # create instance files for all created folder
+    all_extracted_instances_file = "all_extracted_instances.txt"
+    create_instance_file(extraction_folder, all_extracted_instances_file)
+
+    extracted_algo_config_train_file = "extracted_algo_config_train_instances.txt"
+    extracted_algo_config_test_file = "extracted_algo_config_test_instances.txt"
+    extracted_algo_selection_train_file = "extracted_algo_selection_train_instances.txt"
+    extracted_algo_selection_test_file = "extracted_algo_selection_test_instances.txt"
+
+    create_instance_file(extract_config_training_folder, extracted_algo_config_train_file)
+    create_instance_file(extract_config_testing_folder, extracted_algo_config_test_file)
+    create_instance_file(extract_selection_training_folder, extracted_algo_selection_train_file)
+    create_instance_file(extract_selection_testing_folder, extracted_algo_selection_test_file)
+
+    raw_algo_config_train_file = "raw_algo_config_train_instances.txt"
+    raw_algo_config_test_file = "raw_algo_config_test_instances.txt"
+    raw_algo_selection_train_file = "raw_algo_selection_train_instances.txt"
+    raw_algo_selection_test_file = "raw_algo_selection_test_instances.txt"
+
+    create_instance_file(config_training_folder, raw_algo_config_train_file)
+    create_instance_file(config_testing_folder, raw_algo_config_test_file)
+    create_instance_file(selection_training_folder, raw_algo_selection_train_file)
+    create_instance_file(selection_testing_folder, raw_algo_selection_test_file)
+
+    print("config stats:")
+    print_statistics(train_test_percentage,
+                     config_training_folder, config_testing_folder,
+                     extract_config_training_folder, extract_config_testing_folder)
+
+    print("selection stats:")
+    print_statistics(train_test_percentage,
+                     selection_training_folder, selection_testing_folder,
+                     extract_selection_training_folder, extract_selection_testing_folder)
+
+def print_statistics(train_test_percentage, raw_train, raw_test, extracted_train, extracted_test):
+
+    def num_of_files(folder):
+        return len([f for f in os.listdir(folder) if f.endswith(".cnf")])
+
+    num_raw_train = num_of_files(raw_train)
+    num_raw_test = num_of_files(raw_test)
+    print(f"raw train: {num_raw_train}, raw test: {num_raw_test}")
+    actual_percentage = num_raw_train / (num_raw_train + num_raw_test)
+    print(f"train percentage: {actual_percentage}, wanted percentage: {train_test_percentage}")
+
+    num_extracted_train = num_of_files(extracted_train)
+    num_extracted_test = num_of_files(extracted_test)
+    print(f"ex train: {num_extracted_train}, ex test: {num_extracted_test}")
+    actual_percentage = num_extracted_train / (num_extracted_train + num_extracted_test)
+    print(f"train percentage: {actual_percentage}, wanted percentage: {train_test_percentage}")
+
 
 if __name__ == "__main__":
     main()
