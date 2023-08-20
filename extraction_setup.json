@@ -1,0 +1,11 @@
+{
+    "name" : "extraction_output",
+    "executable" :  "/home/guests/cpriesne/copperbench/feature_wrapper.sh",
+    "configs" : "extraction_config.txt",
+    "instances" : "all_instances.txt",
+    "timeout" : 3600,
+    "mem_limit" : 210000,
+    "request_cpus" : 12,
+    "working_dir" : ".",
+    "exclusive": true
+}
