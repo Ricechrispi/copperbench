@@ -61,10 +61,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "${INSTANCE}" ]]; then
-  echo "c o Please supply an instance file"
-  exit 1
-fi
 
 echo "c o ================= TEST ENV VARS ======================"
 echo "c o ENV EXTRACT = ${EXTRACT}"
