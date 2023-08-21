@@ -64,8 +64,8 @@ def main():
 
     config_to_selection_percentage = 0.5
     train_test_percentage = 0.8
-    # extraction_folder = "home/guests/cpriesne/instances/extracted"
-    extraction_folder = "/home/ricechrispi/PycharmProjects/copperbench/extracted"
+    extraction_folder = "home/guests/cpriesne/instances/extracted"
+    # extraction_folder = "/home/ricechrispi/PycharmProjects/copperbench/extracted"
 
     config_folder = os.path.join(os.path.dirname(args.instance_folder),
                                  "algo_config")
