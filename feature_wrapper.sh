@@ -105,28 +105,28 @@ conda activate "$conda_env_name"
 echo "c o ================= Building Command String ============"
 cmd="python feature_runner.py"
 if [[ -n "${EXTRACT}" ]]; then
-  cmd+=" -extract"
+  cmd+=" --extract"
 fi
 if [[ -n "${INSTANCE}" ]]; then
-  cmd+=" -instance ${INSTANCE}"
+  cmd+=" --instance ${INSTANCE}"
 fi
 if [[ -n "${EXT_FOLDER}" ]]; then
-  cmd+=" -ext_folder ${EXT_FOLDER}"
+  cmd+=" --ext_folder ${EXT_FOLDER}"
 fi
 if [[ -n "${FEAT}" ]]; then
-  cmd+=" -feat"
+  cmd+=" --feat"
 fi
 if [[ -n "${INSTANCE_FOLDER}" ]]; then
-  cmd+=" -instance_folder ${INSTANCE_FOLDER}"
+  cmd+=" --instance_folder ${INSTANCE_FOLDER}"
 fi
 if [[ -n "${COMBINED_FILE}" ]]; then
-  cmd+=" -combined_file ${COMBINED_FILE}"
+  cmd+=" --combined_file ${COMBINED_FILE}"
 fi
 if [[ -n "${LOG_LEVEL}" ]]; then
-  cmd+=" -log_level ${LOG_LEVEL}"
+  cmd+=" --log_level ${LOG_LEVEL}"
 fi
 if [[ "${RUN_LOCALLY}" == "True" ]]; then
-  cmd+=" -run_locally"
+  cmd+=" --run_locally"
 fi
 echo "c o SOLVERCMD=$cmd"
 

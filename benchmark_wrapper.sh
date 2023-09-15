@@ -109,18 +109,18 @@ echo "c o ================= Preparing tmpfiles ================="
 tmpfile=$(mktemp /run/shm/result.XXXXXX)
 
 echo "c o ================= Building Command String ============"
-cmd="python benchmark_runner.py ${ALGO} -instance ${INSTANCE}"
+cmd="python benchmark_runner.py ${ALGO} --instance ${INSTANCE}"
 if [[ -n "${SUBSOLVER}" ]]; then
-  cmd+=" -subsolver ${SUBSOLVER}"
+  cmd+=" --subsolver ${SUBSOLVER}"
 fi
 if [[ -n "${PFILE}" ]]; then
-  cmd+=" -param_file ${PFILE}"
+  cmd+=" --param_file ${PFILE}"
 fi
 if [[ -n "${RUN_ID}" ]]; then
-  cmd+=" -run_id ${RUN_ID}"
+  cmd+=" --run_id ${RUN_ID}"
 fi
 if [[ "${RUN_LOCALLY}" == "True" ]]; then
-  cmd+=" -run_locally"
+  cmd+=" --run_locally"
 fi
 echo "c o SOLVERCMD=$cmd"
 
