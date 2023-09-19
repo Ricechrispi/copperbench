@@ -1,0 +1,11 @@
+{
+    "name" : "smac_output",
+    "executable" :  "/home/guests/cpriesne/copperbench/smac_wrapper.sh",
+    "configs" : "benchmark_configs.txt",
+    "instances" : "smac_instances.txt",
+    "timeout" : 3600,
+    "mem_limit" : 210000,
+    "request_cpus" : 1,
+    "working_dir" : ".",
+    "exclusive": true
+}
