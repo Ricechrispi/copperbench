@@ -1,1 +1,1 @@
---instance_folder instances/extracted_algo_config_train
+--instance_folder /home/guests/cpriesne/instances/extracted_algo_config/train
