@@ -1,1 +1,1 @@
---algo d4 --n_trials=500 --n_workers=3
+--algo d4 --param_file=new_d4_algo_params.json --n_trials=500 --n_workers=3
