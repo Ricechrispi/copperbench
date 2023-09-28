@@ -1,88 +1,10 @@
-# existing eval code searches for stdout.txt files
-#  those still exist, right?
-#  the biggest problem so far: we get results in the form of:
-#   config1
-#       instance1   (actually like track1_001.cnf)
-#           run1
-#               stdout.log
-#               stderr.log
-#
-#   metadata.json
-#
-#   I need to move/rename the folders s.t. the folder names match up with the instance name again ...
-#   wanted:
-#       config1 (subject to change, maybe I can rename this with code change in copperbench
-#           track1_001.cnf
-#               stdout.log
-#               stderr.log
-#
-#
-# game plan: look at metadata.json, looks like a dict with instances:
-#       metadata['instances'] = instances
-#           where instances is a dict, where keys are 'instance1' and values are the strings found in instances.txt
-#   strip the lines
-#
-#  observation: copying/renaming hundreds of files is quite wasteful
-#  instead, maybe make my eval script take the metadata.csv file and parse it on the go?
-#       -> yes!
-#
-#
-
-# instances={}
-# instances["instance1"]="-i /home/guests/cpriesne/instances/track1_public/track1_081.cnf"
-# instances["instance2"]="-i /home/guests/cpriesne/instances/track1_public/track1_083.cnf"
-#
-# metadata={}
-# metadata["instances"] = instances
-# #################################
-#
-# instances_dict = metadata["instances"]
-# for key, value in instances_dict.items():
-#     pass
-
-## example from repo:
-# import re
-# from typing import Dict, Optional
-# import pandas as pd
-# from pathlib import Path
-#
-# ## uncomment and fill in correct if copperbench is not installed as a module:
-# # import sys
-# # sys.path.append('/Users/tgeibing/Documents/git/cobrabench/')
-# from copperbench import postprocess
-#
-#
-# regex_results = re.compile(r'Total result: \n\t- Hard conflicts: (?P<conflicts>\d+)\n\t- Soft penalties: (?P<penalty>\d+)')
-# regex_optimal = re.compile(r'found optimal solution')
-# regex_penalties = re.compile(r"- Same employee: (?P<sameEmployee>\d+)\n\t- Project completion time: (?P<projectCompletionTime>\d+)\n\t- Preferred employees: (?P<preferredEmployees>\d+)\n\t- Job target date: (?P<targetDate>\d+)")
-#
-#
-# def read_log(log_file: Path) -> Optional[Dict[str, int]]:
-#     '''
-#     parse log and return what should be added to the dataframe as a dict or None for no entry
-#     '''
-#     with open(log_file, 'r') as file:
-#         s = file.read()
-#         match_result = regex_results.search(s)
-#         if match_result:
-#             conflicts = int(match_result.group('conflicts'))
-#             if conflicts == 0:
-#                 penatly = int(match_result.group('penalty'))
-#                 opt = regex_optimal.search(s) != None
-#                 return { 'objective' : penatly, 'optimal' : opt }
-#
-#
-# data = postprocess.process_bench('bench_vlns', read_log)
-# df = pd.DataFrame.from_records(data)
-# df.to_csv('results_vlns.csv')
-
-
 import os
 import argparse
 import datetime
 import tarfile
 import json
 import re
+
 import pandas as pd
 
 
@@ -103,33 +25,38 @@ def extract_regex(stream, reg_expressions):
     return found_matches
 
 
+# TODO: still missing:  make multiple runs work, i.e. save run as column, have an average
+#                       sat/unsat/unknown?
+#                       log 10 estimate!! most notably nesthdb gives this
+#                           -> maybe make this part of benchmark_runner.py?
+#                       add path/timestamp to output files
+#                       also: a bit of doc here!
 def create_csv(config_folder, config_name, instances):
-    # TODO: this is cumbersome to change
-    df = pd.DataFrame(columns=["instance",
-                               "instance_bench_number",
-                               "algo",
-                               "pfile",
-                               "subsolver",
-                               "retcode",
-                               "models",
-                               "date",
-                               "node",
-                               "cpus_allowed",
-                               "timeout",
-                               "real_time",
-                               "cpu_total_time",
-                               "cpu_user_time",
-                               "cpu_sys_time",
-                               "memory_limit",
-                               "max_virtual_memory",
-                               "max_memory",
-                               "verdict",
-                               ]
-                      )
+    algo_df = pd.DataFrame(columns=["instance",
+                                    "instance_bench_number",
+                                    "algo",
+                                    "pfile",
+                                    "subsolver",
+                                    "retcode",
+                                    "models",
+                                    "date",
+                                    "node",
+                                    "cpus_allowed",
+                                    "timeout",
+                                    "real_time",
+                                    "cpu_total_time",
+                                    "cpu_user_time",
+                                    "cpu_sys_time",
+                                    "memory_limit",
+                                    "max_virtual_memory",
+                                    "max_memory",
+                                    "verdict",
+                                    ]
+                           )
 
     for instance_folder, instance_name in instances.items():
         run_folder = os.path.join(config_folder, instance_folder)
-        run_folder = os.path.join(run_folder, "run1")  # TODO: only works for 1 run
+        run_folder = os.path.join(run_folder, "run1")
         data = {
             "instance": instance_name,
             "instance_bench_number": instance_folder,
@@ -160,7 +87,7 @@ def create_csv(config_folder, config_name, instances):
         update_data(data, os.path.join(run_folder, "stdout.log"), stdout_regs)
 
         # stderr.log: models and retcode (if finished)
-        stderr_regs = {"models": re.compile(r".*Benchmarking\s+over\.\s+models:(\w+)"),
+        stderr_regs = {"models": re.compile(r".*Benchmarking\s+over\.\s+models:\s*(\w+)"),
                        "retcode": re.compile(r".*Benchmarking\s+over\.\s+models:\w+,\s+returncode:(\w+)"), }
         update_data(data, os.path.join(run_folder, "stderr.log"), stderr_regs)
 
@@ -185,39 +112,34 @@ def create_csv(config_folder, config_name, instances):
                               r"Enforcing wall clock limit \(soft limit, will send SIGTERM then SIGKILL\):\s+(\w+)"),
                           "memory_limit": re.compile(
                               r"Enforcing VSIZE limit \(hard limit, stack expansion will fail with SIGSEGV, brk\(\) and mmap\(\) will return ENOMEM\):\s+(\w+)"),
-                          "max_virtual_memory": re.compile(r"Max\. virtual memory \(cumulated for all children\) \(KiB\):\s+(\w+)"),
+                          "max_virtual_memory": re.compile(
+                              r"Max\. virtual memory \(cumulated for all children\) \(KiB\):\s+(\w+)"),
                           "max_memory": re.compile(r"Max\. memory \(cumulated for all children\) \(KiB\):\s+(\w+)"),
                           }
         update_data(data, os.path.join(run_folder, "runsolver.log"), runsolver_regs)
 
-        # TODO: still missing: make multiple runs work, also save run as column
-        #                       sat/unsat/unknown?
-        #                       log 10 estimate!! most notably nesthdb gives this
-        #                           -> maybe make this part of benchmark_runner.py?
-        #                       also add copperbench config name (config1, config2) to output, making comparison easier
-        #                       make returncode passing consistent!
-        #       also: a bit of doc here!
-
         if data["real_time"] is not None and data["timeout"] is not None \
                 and int(data["real_time"]) >= int(data["timeout"]):
-                data["verdict"] = "TIMEOUT"
+            data["verdict"] = "TIMEOUT"
 
         elif data["max_virtual_memory"] is not None \
                 and data["max_memory"] is not None \
                 and data["memory_limit"] is not None \
-                and (int(data["max_virtual_memory"]) >= int(data["memory_limit"])) or (int(data["max_memory"]) >= int(data["memory_limit"])):
-                data["verdict"] = "MEMOUT"
+                and (int(data["max_virtual_memory"]) >= int(data["memory_limit"])) or (
+                int(data["max_memory"]) >= int(data["memory_limit"])):
+            data["verdict"] = "MEMOUT"
 
         elif data["retcode"] is None or int(data["retcode"]) != 0:
-                data["verdict"] = "CRASH"
+            data["verdict"] = "CRASH"
         else:
-            data["verdict"] = "OK" # probably
+            data["verdict"] = "OK"  # probably
 
         print(json.dumps(data, indent=2))
-        df.loc[len(df)] = data
+        algo_df.loc[len(algo_df)] = data
 
+    algo_df = algo_df.set_index("instance")
     # save it to a csv file
-    df.to_csv(f"{config_name}.csv")  # TODO: add path/timestamp
+    algo_df.to_csv(f"{config_name}.csv")
 
 
 def parse_metadata(base_folder):
@@ -239,8 +161,8 @@ def parse_metadata(base_folder):
         name_parts = []
         for part in config_parts:
             if '/' not in part:
-                part = part.split(".")[0] # get rid of file extensions
-                part = part.split("-")[-1] # get rid of -- and - prefixes
+                part = part.split(".")[0]  # get rid of file extensions
+                part = part.split("-")[-1]  # get rid of -- and - prefixes
                 name_parts.append(part)
         new_name = "_".join(name_parts)
         new_configs[key] = new_name
@@ -272,7 +194,7 @@ def extract(archive, output_folder):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--archive", dest="archive", default="cpriesne_output.tar.gz", type=str)
+    parser.add_argument("--archive", dest="archive", type=str)
     args = parser.parse_args()
     return args
 
@@ -290,7 +212,9 @@ def main():
     print(json.dumps(metadata, indent=2))
 
     for config in metadata["configs"].keys():
-        create_csv(os.path.join(base_folder, config), metadata["configs"][config], metadata["instances"])
+        create_csv(config_folder=os.path.join(base_folder, config),
+                   config_name=metadata["configs"][config],
+                   instances=metadata["instances"])
 
 
 if __name__ == "__main__":
