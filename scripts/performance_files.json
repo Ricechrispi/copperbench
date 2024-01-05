@@ -1,0 +1,8 @@
+{
+    "d4": "/home/ricechrispi/PycharmProjects/copperbench/scripts/algo_d4.csv",
+    "dpmc": "/home/ricechrispi/PycharmProjects/copperbench/scripts/algo_dpmc.csv",
+    "ganak": "/home/ricechrispi/PycharmProjects/copperbench/scripts/algo_ganak.csv",
+    "miniC2D": "/home/ricechrispi/PycharmProjects/copperbench/scripts/algo_miniC2D.csv",
+    "sharpsat_marcthurley": "/home/ricechrispi/PycharmProjects/copperbench/scripts/algo_sharpsat_marcthurley.csv",
+    "sharpsat_td": "/home/ricechrispi/PycharmProjects/copperbench/scripts/algo_sharpsat_td.csv"
+}
