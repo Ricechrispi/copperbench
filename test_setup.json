@@ -1,0 +1,11 @@
+{
+    "name" : "test_output",
+    "executable" :  "/home/guests/cpriesne/copperbench/test_wrapper.sh",
+    "configs" : "test_configs.txt",
+    "instances" : "test_instances.txt",
+    "timeout" : 900,
+    "mem_limit" : 210000,
+    "request_cpus" : 12,
+    "working_dir" : ".",
+    "exclusive": true
+}
